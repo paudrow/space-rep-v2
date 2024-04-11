@@ -1,0 +1,9 @@
+{
+  "unstable": [
+    "temporal",
+    "denokv"
+  ],
+  "tasks": {
+    "dev": "deno run --watch src/main.ts"
+  }
+}
