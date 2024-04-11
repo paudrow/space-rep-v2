@@ -2,7 +2,15 @@
 
 ## 2024-04-10
 
+I refactored the types and db. I started testing the DB.
 
+Next steps are to finish testing the DB.
+
+Also, I should:
+
+- [ ] Setup CI
+- [ ] Add readme
+- [ ] Make emailer code
 
 ## 2024-04-09
 
@@ -41,11 +49,11 @@ Okay, so I have done some things.
 
 What have I done?
 
-* Created fundamental types, functions to check correctness, and basic database interface
+- Created fundamental types, functions to check correctness, and basic database
+  interface
 
 What is next?
 
-* Add tests
-* Add the ability to sort attempts by date
-* Implement a simple Anki algorithm using the defined types
-
+- Add tests
+- Add the ability to sort attempts by date
+- Implement a simple Anki algorithm using the defined types

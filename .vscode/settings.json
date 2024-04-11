@@ -5,5 +5,7 @@
     "markdown": false,
     "scminput": false
   },
-  "deno.unstable": true
+  "deno.unstable": true,
+  "editor.indentSize": 2,
+  "editor.tabSize": 2
 }
