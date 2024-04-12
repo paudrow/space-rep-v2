@@ -1,5 +1,11 @@
 # RECORD
 
+## 2024-04-11
+
+What am I doing today?
+
+Test the database. Okay!
+
 ## 2024-04-10
 
 I refactored the types and db. I started testing the DB.

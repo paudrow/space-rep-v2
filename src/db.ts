@@ -50,15 +50,18 @@ export class User {
     return result.ok ? user as UserType : null;
   }
 
-  static async read(db: Deno.Kv, user: string): Promise<User | null> {
-    const result = await db.get<User>(getDbUserPath(user));
+  static async read(db: Deno.Kv, user: string): Promise<UserType | null> {
+    const result = await db.get<UserType>(getDbUserPath(user));
     return result.value;
   }
 
-  static async readAll(db: Deno.Kv): Promise<User[]> {
-    const users: User[] = [];
-    for await (const { value } of db.list<User>({ prefix: ["users"] })) {
-      users.push(value);
+  static async readAll(db: Deno.Kv): Promise<UserType[]> {
+    const users: UserType[] = [];
+    const prefix = getDbUsersPath();
+    for await (const { key, value } of db.list<UserType>({ prefix })) {
+      if (key.length === prefix.length + 1) {
+        users.push(value);
+      }
     }
     return users;
   }
