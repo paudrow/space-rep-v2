@@ -6,59 +6,80 @@ import {
 
 // Paths
 
-function getDbUsersPath(): string[] {
+function getKvUsersPath(): string[] {
   return ["users"];
 }
 
-function getDbUserPath(userId: string): string[] {
-  return [...getDbUsersPath(), userId];
+function getKvUserPath(userId: string): string[] {
+  return [...getKvUsersPath(), userId];
 }
 
-function getDbCardsPath(userId: string): string[] {
-  return [...getDbUserPath(userId), "cards"];
+function getKvCardsPath(userId: string): string[] {
+  return [...getKvUserPath(userId), "cards"];
 }
 
-function getDbCardPath(userId: string, cardId: string): string[] {
-  return [...getDbCardsPath(userId), cardId];
+function getKvCardPath(userId: string, cardId: string): string[] {
+  return [...getKvCardsPath(userId), cardId];
 }
 
-function getDbCardAttemptsPath(userId: string): string[] {
-  return [...getDbUserPath(userId), "cardAttempts"];
+function getKvCardAttemptsPath(userId: string): string[] {
+  return [...getKvUserPath(userId), "cardAttempts"];
 }
 
-function getDbCardAttemptPath(userId: string, attemptId: string): string[] {
-  return [...getDbCardAttemptsPath(userId), attemptId];
+function getKvCardAttemptPath(userId: string, attemptId: string): string[] {
+  return [...getKvCardAttemptsPath(userId), attemptId];
 }
 
 // CRUD
+
+export class Db {
+  private constructor() {}
+
+  private User = User;
+  private Card = Card;
+  private CardAttempt = CardAttempt;
+
+  static get User() {
+    return User;
+  }
+  static get Card() {
+    return Card;
+  }
+  static get CardAttempt() {
+    return CardAttempt;
+  }
+  static reset(kv: Deno.Kv) {
+    return resetDb(kv);
+  }
+}
 
 export class User {
   private constructor() {}
 
   static async create(
-    db: Deno.Kv,
+    kv: Deno.Kv,
     user: Omit<UserType, "id"> & { id?: string },
   ): Promise<UserType | null> {
     if (!user.id) {
       user.id = crypto.randomUUID();
     }
-    const key = getDbUserPath(user.id);
-    const result = await db.atomic()
+    const key = getKvUserPath(user.id);
+    const result = await kv.atomic()
       .check({ key, versionstamp: null })
       .set(key, user)
       .commit();
     return result.ok ? user as UserType : null;
   }
 
-  static async read(db: Deno.Kv, user: string): Promise<UserType | null> {
-    const result = await db.get<UserType>(getDbUserPath(user));
+  static async read(kv: Deno.Kv, user: string): Promise<UserType | null> {
+    const result = await kv.get<UserType>(getKvUserPath(user));
     return result.value;
   }
 
-  static async readAll(db: Deno.Kv): Promise<UserType[]> {
+  static async readAll(kv: Deno.Kv): Promise<UserType[]> {
     const users: UserType[] = [];
-    const prefix = getDbUsersPath();
-    for await (const { key, value } of db.list<UserType>({ prefix })) {
+    const prefix = getKvUsersPath();
+    for await (const { key, value } of kv.list<UserType>({ prefix })) {
       if (key.length === prefix.length + 1) {
         users.push(value);
       }
@@ -66,10 +87,10 @@ export class User {
     return users;
   }
 
-  static async delete(db: Deno.Kv, user: string) {
-    const path = getDbUserPath(user);
-    await db.delete(path);
-    await Card.deleteAll(db, user);
+  static async delete(kv: Deno.Kv, user: string) {
+    const path = getKvUserPath(user);
+    await kv.delete(path);
+    await Card.deleteAll(kv, user);
   }
 }
 
@@ -77,15 +98,15 @@ export class Card {
   private constructor() {}
 
   static async create(
-    db: Deno.Kv,
+    kv: Deno.Kv,
     userId: string,
     card: Omit<CardType, "id"> & { id?: string },
   ): Promise<CardType | null> {
     if (!card.id) {
       card.id = crypto.randomUUID();
     }
-    const key = getDbCardPath(userId, card.id);
-    const result = await db.atomic()
+    const key = getKvCardPath(userId, card.id);
+    const result = await kv.atomic()
       .check({ key, versionstamp: null })
       .set(key, card)
       .commit();
@@ -93,38 +114,38 @@ export class Card {
   }
 
   static async read(
-    db: Deno.Kv,
+    kv: Deno.Kv,
     userId: string,
     cardId: string,
   ): Promise<CardType | null> {
-    const result = await db.get<CardType>(getDbCardPath(userId, cardId));
+    const result = await kv.get<CardType>(getKvCardPath(userId, cardId));
     return result.value;
   }
 
-  static async readAll(db: Deno.Kv, userId: string): Promise<CardType[]> {
+  static async readAll(kv: Deno.Kv, userId: string): Promise<CardType[]> {
     const cards: CardType[] = [];
     for await (
-      const { value } of db.list<CardType>({ prefix: getDbCardsPath(userId) })
+      const { value } of kv.list<CardType>({ prefix: getKvCardsPath(userId) })
     ) {
       cards.push(value);
     }
     return cards;
   }
 
-  static async delete(db: Deno.Kv, userId: string, cardId: string) {
-    const path = getDbCardPath(userId, cardId);
-    await db.delete(path);
-    await CardAttempt.deleteAllForCardId(db, userId, cardId);
+  static async delete(kv: Deno.Kv, userId: string, cardId: string) {
+    const path = getKvCardPath(userId, cardId);
+    await kv.delete(path);
+    await CardAttempt.deleteAllForCardId(kv, userId, cardId);
   }
 
-  static async deleteAll(db: Deno.Kv, userId: string) {
+  static async deleteAll(kv: Deno.Kv, userId: string) {
     for await (
-      const { key, value: card } of db.list<CardType>({
-        prefix: getDbCardsPath(userId),
+      const { key, value: card } of kv.list<CardType>({
+        prefix: getKvCardsPath(userId),
       })
     ) {
-      await db.delete(key);
-      await CardAttempt.deleteAllForCardId(db, userId, card.id);
+      await kv.delete(key);
+      await CardAttempt.deleteAllForCardId(kv, userId, card.id);
     }
   }
 }
@@ -133,37 +154,37 @@ export class CardAttempt {
   private constructor() {}
 
   static async create(
-    db: Deno.Kv,
+    kv: Deno.Kv,
     userId: string,
     attempt: Omit<CardAttemptType, "id"> & { id?: string },
   ): Promise<CardAttemptType | null> {
     if (!attempt.id) {
       attempt.id = crypto.randomUUID();
     }
-    const key = getDbCardAttemptPath(userId, attempt.id);
-    const result = await db.set(key, attempt);
+    const key = getKvCardAttemptPath(userId, attempt.id);
+    const result = await kv.set(key, attempt);
     return result.ok ? attempt as CardAttemptType : null;
   }
 
   static async read(
-    db: Deno.Kv,
+    kv: Deno.Kv,
     userId: string,
     attemptId: string,
   ): Promise<CardAttemptType | null> {
-    const result = await db.get<CardAttemptType>(
-      getDbCardAttemptPath(userId, attemptId),
+    const result = await kv.get<CardAttemptType>(
+      getKvCardAttemptPath(userId, attemptId),
     );
     return result.value;
   }
 
   static async readAll(
-    db: Deno.Kv,
+    kv: Deno.Kv,
     userId: string,
   ): Promise<CardAttemptType[]> {
     const attempts: CardAttemptType[] = [];
     for await (
-      const { value } of db.list<CardAttemptType>({
-        prefix: getDbCardAttemptsPath(userId),
+      const { value } of kv.list<CardAttemptType>({
+        prefix: getKvCardAttemptsPath(userId),
       })
     ) {
       attempts.push(value);
@@ -177,14 +198,14 @@ export class CardAttempt {
   }
 
   static async readAllForCardId(
-    db: Deno.Kv,
+    kv: Deno.Kv,
     userId: string,
     cardId: string,
   ): Promise<CardAttemptType[]> {
     const attempts: CardAttemptType[] = [];
     for await (
-      const { value } of db.list<CardAttemptType>({
-        prefix: getDbCardAttemptsPath(userId),
+      const { value } of kv.list<CardAttemptType>({
+        prefix: getKvCardAttemptsPath(userId),
       })
     ) {
       if (value.cardId === cardId) {
@@ -195,37 +216,37 @@ export class CardAttempt {
   }
 
   static async delete(
-    db: Deno.Kv,
+    kv: Deno.Kv,
     userId: string,
     attemptId: string,
   ) {
-    const path = getDbCardAttemptPath(userId, attemptId);
-    await db.delete(path);
+    const path = getKvCardAttemptPath(userId, attemptId);
+    await kv.delete(path);
   }
 
   static async deleteAll(
-    db: Deno.Kv,
+    kv: Deno.Kv,
     userId: string,
   ) {
     for await (
-      const { key } of db.list({ prefix: getDbCardAttemptsPath(userId) })
+      const { key } of kv.list({ prefix: getKvCardAttemptsPath(userId) })
     ) {
-      await db.delete(key);
+      await kv.delete(key);
     }
   }
 
   static async deleteAllForCardId(
-    db: Deno.Kv,
+    kv: Deno.Kv,
     userId: string,
     cardId: string,
   ) {
     for await (
-      const { key, value } of db.list<CardAttemptType>({
-        prefix: getDbCardAttemptsPath(userId),
+      const { key, value } of kv.list<CardAttemptType>({
+        prefix: getKvCardAttemptsPath(userId),
       })
     ) {
       if (value.cardId === cardId) {
-        await db.delete(key);
+        await kv.delete(key);
       }
     }
   }
@@ -233,8 +254,8 @@ export class CardAttempt {
 
 // Utils
 
-export async function resetDb(db: Deno.Kv) {
-  for await (const { key } of db.list({ prefix: [] })) {
-    await db.delete(key);
+export async function resetDb(kv: Deno.Kv) {
+  for await (const { key } of kv.list({ prefix: [] })) {
+    await kv.delete(key);
   }
 }

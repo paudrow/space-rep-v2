@@ -4,7 +4,10 @@
 
 What am I doing today?
 
-Test the database. Okay!
+- [x] Test the database.
+- [ ] Setup CI
+
+Done! Now what?
 
 ## 2024-04-10
 
