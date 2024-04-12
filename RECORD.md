@@ -5,9 +5,21 @@
 What am I doing today?
 
 - [x] Test the database.
-- [ ] Setup CI
+- [x] Setup CI
+- [ ] Add scheduling algorithm
 
-Done! Now what?
+What is it that I want for the scheduling algorithm?
+
+I want
+
+- A prioritized list of what to ask, where oldest is asked first
+- The user can set between 1 and n tasks to ask a day
+- Success => double; failure => ask tomorrow + half time to ask
+
+What should I store in the database? It is nice to make all of this computed,
+althought it is less efficient.
+
+Okay, done for now. Next time, I'll continue working on the scheduler algorithm.
 
 ## 2024-04-10
 
@@ -17,7 +29,7 @@ Next steps are to finish testing the DB.
 
 Also, I should:
 
-- [ ] Setup CI
+- [x] Setup CI
 - [ ] Add readme
 - [ ] Make emailer code
 
