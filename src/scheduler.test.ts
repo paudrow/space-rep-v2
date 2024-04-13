@@ -1,8 +1,5 @@
 import { describe, it } from "@std/testing/bdd";
-import {
-  assertAlmostEquals,
-  assertEquals,
-} from "@std/assert";
+import { assertAlmostEquals, assertEquals } from "@std/assert";
 import { nextAttemptDateTime } from "./scheduler.ts";
 import { CardAttempt } from "./types.ts";
 
