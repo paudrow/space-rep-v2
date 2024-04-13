@@ -1,5 +1,18 @@
 # RECORD
 
+## 2024-04-12
+
+What to do today?
+
+Continue on the scheduling algorithm.
+
+Desired behavior
+
+- Last wrong => 1
+- Right -d1- wrong -1- right => d1/2
+- Wrong -1- wrong -1- right => 1
+- Right -d1- right => d1*2
+
 ## 2024-04-11
 
 What am I doing today?
