@@ -1,4 +1,5 @@
 import { CardAttempt } from "./types.ts";
+import { None, Option, Some } from "@oxi/option";
 
 export class AttemptsAccessor {
   private attempts: CardAttempt[] = [];
@@ -25,32 +26,60 @@ export class AttemptsAccessor {
     return this.attempts.length;
   }
 
-  get timeBetweenLastTwoAttempts(): number | null {
+  get timeBetweenLastTwoAttempts(): Option<number> {
     if (this.length < 2) {
-      return null;
+      return None;
     }
-    return this.timeBetweenAttempts[0];
+    return Some(this.timeBetweenAttempts[0]);
   }
 
-  get lastAttemptTime(): Temporal.PlainDateTime | null {
+  get lastAttemptTime(): Option<Temporal.PlainDateTime> {
     if (this.length === 0) {
-      return null;
+      return None;
     }
-    return Temporal.PlainDateTime.from(this.attempts[0].date);
+    return Some(Temporal.PlainDateTime.from(this.attempts[0].date));
   }
 
-  get isLastAttemptCorrect(): boolean | null {
+  get isLastAttemptCorrect(): Option<boolean> {
     if (this.length === 0) {
-      return null;
+      return None;
     }
-    return this.attempts[0].correct;
+    return Some(this.attempts[0].correct);
   }
 
-  get isLastTwoAttemptsIncorrect(): boolean | null {
+  get isLastTwoAttemptsCorrect(): Option<boolean> {
     if (this.length < 2) {
-      return null;
+      return None;
     }
-    return !this.attempts[0].correct && !this.attempts[1].correct;
+    return Some(this.attempts[0].correct && this.attempts[1].correct);
+  }
+
+  get isLastThreeCorrectWrongCorrect(): Option<boolean> {
+    if (this.length < 3) {
+      return None;
+    }
+    return Some(
+      this.attempts[0].correct &&
+        !this.attempts[1].correct &&
+        this.attempts[2].correct,
+    );
+  }
+
+  get timeBetweenCorrectAndWrongBeforeLastCorrect(): Option<number> {
+    // For when the last three attempts are correct, wrong, correct.
+    // This gives the time between the first correct and the wrong attempt.
+
+    if (this.length < 3) {
+      return None;
+    }
+    if (
+      this.attempts[0].correct &&
+      !this.attempts[1].correct &&
+      this.attempts[2].correct
+    ) {
+      return Some(this.timeBetweenAttempts[1]);
+    }
+    return None;
   }
 }
 

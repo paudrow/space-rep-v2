@@ -2,11 +2,29 @@
   "version": "3",
   "packages": {
     "specifiers": {
+      "jsr:@oxi/core@^0.2.1": "jsr:@oxi/core@0.2.1",
+      "jsr:@oxi/option@^0.2.0": "jsr:@oxi/option@0.2.0",
+      "jsr:@oxi/result@^0.2.0": "jsr:@oxi/result@0.2.0",
       "jsr:@std/assert@^0.221.0": "jsr:@std/assert@0.221.0",
       "jsr:@std/fmt@^0.221.0": "jsr:@std/fmt@0.221.0",
       "jsr:@std/testing@^0.221.0": "jsr:@std/testing@0.221.0"
     },
     "jsr": {
+      "@oxi/core@0.2.1": {
+        "integrity": "36e340fb6d9fd29013c23cfd867645390e39f7b9b253c28514c2b5cb97638b5e"
+      },
+      "@oxi/option@0.2.0": {
+        "integrity": "31eb26fe703146a827c446589784918633f6d2250a8b6a00cab10f37f1feeb69",
+        "dependencies": [
+          "jsr:@oxi/core@^0.2.1"
+        ]
+      },
+      "@oxi/result@0.2.0": {
+        "integrity": "b138677c11b7f2cbda8070d83b203b93168765e40f2cea61c76c4f8a8b64b305",
+        "dependencies": [
+          "jsr:@oxi/core@^0.2.1"
+        ]
+      },
       "@std/assert@0.221.0": {
         "integrity": "a5f1aa6e7909dbea271754fd4ab3f4e687aeff4873b4cef9a320af813adb489a",
         "dependencies": [
@@ -27,6 +45,8 @@
   "remote": {},
   "workspace": {
     "dependencies": [
+      "jsr:@oxi/option@^0.2.0",
+      "jsr:@oxi/result@^0.2.0",
       "jsr:@std/assert@^0.221.0",
       "jsr:@std/testing@^0.221.0"
     ]

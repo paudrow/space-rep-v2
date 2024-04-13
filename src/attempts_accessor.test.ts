@@ -1,5 +1,6 @@
 import { describe, it } from "@std/testing/bdd";
 import { assertEquals } from "@std/assert";
+import { None } from "@oxi/option";
 
 import {
   AttemptsAccessor,
@@ -14,10 +15,11 @@ describe("AttemptsAccessor", () => {
   it("works with no attempts", () => {
     const accessor = new AttemptsAccessor([]);
     assertEquals(accessor.length, 0);
-    assertEquals(accessor.lastAttemptTime, null);
-    assertEquals(accessor.timeBetweenLastTwoAttempts, null);
-    assertEquals(accessor.isLastAttemptCorrect, null);
-    assertEquals(accessor.isLastTwoAttemptsIncorrect, null);
+    assertEquals(accessor.lastAttemptTime, None);
+    assertEquals(accessor.timeBetweenLastTwoAttempts, None);
+    assertEquals(accessor.isLastAttemptCorrect, None);
+    assertEquals(accessor.isLastThreeCorrectWrongCorrect, None);
+    assertEquals(accessor.timeBetweenCorrectAndWrongBeforeLastCorrect, None);
   });
 
   it("works with one attempt", () => {
@@ -26,14 +28,46 @@ describe("AttemptsAccessor", () => {
     ];
     const accessor = new AttemptsAccessor(attempts);
     assertEquals(accessor.length, 1);
-    assertEquals(accessor.lastAttemptTime?.toString(), today.toString());
-    assertEquals(accessor.timeBetweenLastTwoAttempts, null);
-    assertEquals(accessor.isLastAttemptCorrect, false);
-    assertEquals(accessor.isLastTwoAttemptsIncorrect, null);
+    assertEquals(
+      accessor.lastAttemptTime.unwrap().toString(),
+      today.toString(),
+    );
+    assertEquals(accessor.timeBetweenLastTwoAttempts, None);
+    assertEquals(accessor.isLastAttemptCorrect.unwrap(), false);
+    assertEquals(accessor.isLastThreeCorrectWrongCorrect, None);
+    assertEquals(accessor.isLastThreeCorrectWrongCorrect, None);
+    assertEquals(accessor.timeBetweenCorrectAndWrongBeforeLastCorrect, None);
   });
 
-  it("works with more than multiple attempts", () => {
+  it("works with two attempts", () => {
     const attempts = [
+      { id: "1", cardId, date: today.toString(), correct: true },
+      {
+        id: "2",
+        cardId,
+        date: today.add({ days: 1 }).toString(),
+        correct: true,
+      },
+    ];
+
+    const accessor = new AttemptsAccessor(attempts, { unit: "day" });
+
+    assertEquals(accessor.length, 2);
+    assertEquals(
+      accessor.lastAttemptTime.unwrap().toString(),
+      today.add({ days: 1 }).toString(),
+    );
+    assertEquals(accessor.unit, "day");
+    assertEquals(accessor.timeBetweenLastTwoAttempts.unwrap(), 1);
+    assertEquals(accessor.isLastAttemptCorrect.unwrap(), true);
+    assertEquals(accessor.isLastTwoAttemptsCorrect.unwrap(), true);
+    assertEquals(accessor.isLastThreeCorrectWrongCorrect, None);
+    assertEquals(accessor.timeBetweenCorrectAndWrongBeforeLastCorrect, None);
+  });
+
+  it("works for 3+ attempts", () => {
+    const attempts = [
+      { id: "0", cardId, date: today.toString(), correct: false },
       { id: "1", cardId, date: today.toString(), correct: true },
       {
         id: "2",
@@ -50,35 +84,20 @@ describe("AttemptsAccessor", () => {
     ];
     const accessor = new AttemptsAccessor(attempts, { unit: "day" });
 
-    assertEquals(accessor.length, 3);
+    assertEquals(accessor.length, 4);
     assertEquals(
-      accessor.lastAttemptTime?.toString(),
+      accessor.lastAttemptTime.unwrap().toString(),
       today.add({ days: 3 }).toString(),
     );
     assertEquals(accessor.unit, "day");
-    assertEquals(accessor.timeBetweenLastTwoAttempts, 2);
-    assertEquals(accessor.isLastAttemptCorrect, true);
-    assertEquals(accessor.isLastTwoAttemptsIncorrect, false);
-  });
-
-  it("gives if last two attempts are incorrect", () => {
-    const attempts = [
-      { id: "1", cardId, date: today.toString(), correct: false },
-      {
-        id: "2",
-        cardId,
-        date: today.add({ days: 1 }).toString(),
-        correct: false,
-      },
-      {
-        id: "3",
-        cardId,
-        date: today.add({ days: 3 }).toString(),
-        correct: false,
-      },
-    ];
-    const accessor = new AttemptsAccessor(attempts, { unit: "day" });
-    assertEquals(accessor.isLastTwoAttemptsIncorrect, true);
+    assertEquals(accessor.timeBetweenLastTwoAttempts.unwrap(), 2);
+    assertEquals(accessor.isLastAttemptCorrect.unwrap(), true);
+    assertEquals(accessor.isLastTwoAttemptsCorrect.unwrap(), false);
+    assertEquals(accessor.isLastThreeCorrectWrongCorrect.unwrap(), true);
+    assertEquals(
+      accessor.timeBetweenCorrectAndWrongBeforeLastCorrect.unwrap(),
+      1,
+    );
   });
 });
 
