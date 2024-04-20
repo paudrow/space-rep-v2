@@ -18,27 +18,27 @@ describe("db", () => {
 
   describe("integration", () => {
     it("should delete a user and all related cards", async () => {
-      const user1 = await User.create(db, { name: "John Doe" });
-      const user2 = await User.create(db, { name: "Jane Doe" });
+      const user1 = (await User.create(db, { name: "John Doe" })).unwrap();
+      const user2 = (await User.create(db, { name: "Jane Doe" })).unwrap();
 
       assert(user1);
       assert(user2);
 
-      const card1 = await Card.create(db, user1.id, {
+      const card1 = (await Card.create(db, user1.id, {
         question: "What is your name?",
         answer: "John Doe",
         type: "text",
-      });
-      const card2 = await Card.create(db, user1.id, {
+      })).unwrap();
+      const card2 = (await Card.create(db, user1.id, {
         question: "What is your phone number?",
         answer: "123-456-7890",
         type: "phone",
-      });
-      const card3 = await Card.create(db, user2.id, {
+      })).unwrap();
+      const card3 = (await Card.create(db, user2.id, {
         question: "What is your name?",
         answer: "John Doe",
         type: "text",
-      });
+      })).unwrap();
       assert(card1);
       assert(card2);
       assert(card3);
@@ -53,27 +53,27 @@ describe("db", () => {
     });
 
     it("should delete a card and related card attempts", async () => {
-      const card1 = await Card.create(db, userId, {
+      const card1 = (await Card.create(db, userId, {
         question: "What is your name?",
         answer: "John Doe",
         type: "text",
-      });
-      const card2 = await Card.create(db, userId, {
+      })).unwrap();
+      const card2 = (await Card.create(db, userId, {
         question: "What is your phone number?",
         answer: "123-456-7890",
         type: "phone",
-      });
+      })).unwrap();
       assert(card1);
       assert(card2);
 
       await CardAttempt.create(db, userId, {
         cardId: card1.id,
-        date: Temporal.Now.plainDateISO().toString(),
+        date: Temporal.Now.plainDateTimeISO(),
         correct: true,
       });
       await CardAttempt.create(db, userId, {
         cardId: card2.id,
-        date: Temporal.Now.plainDateISO().toString(),
+        date: Temporal.Now.plainDateTimeISO(),
         correct: true,
       });
       assertEquals((await CardAttempt.readAll(db, userId)).length, 2);
@@ -83,30 +83,33 @@ describe("db", () => {
       assertEquals((await Card.readAll(db, userId)).length, 1);
       assertEquals((await CardAttempt.readAll(db, userId)).length, 1);
 
-      assertEquals(await Card.read(db, userId, card1.id), null);
-      assertEquals((await Card.read(db, userId, card2.id))?.id, card2.id);
+      assert((await Card.read(db, userId, card1.id)).isNone());
+      assertEquals(
+        (await Card.read(db, userId, card2.id)).unwrap().id,
+        card2.id,
+      );
     });
   });
 
   describe("users", () => {
     it("should create a new user", async () => {
       assertEquals(await User.readAll(db), []);
-      const result = await User.create(db, { name: "John Doe" });
+      const result = (await User.create(db, { name: "John Doe" })).unwrap();
       assert(result);
       assertEquals((await User.readAll(db)).length, 1);
     });
 
     it("should read a user", async () => {
-      const user = await User.create(db, { name: "John Doe" });
+      const user = (await User.create(db, { name: "John Doe" })).unwrap();
       assert(user);
-      const result = await User.read(db, user.id);
+      const result = (await User.read(db, user.id)).unwrap();
       assert(result);
       assertEquals(result.id, user.id);
     });
 
     it("should read all users", async () => {
-      const user1 = await User.create(db, { name: "John Doe" });
-      const user2 = await User.create(db, { name: "Jane Doe" });
+      const user1 = (await User.create(db, { name: "John Doe" })).unwrap();
+      const user2 = (await User.create(db, { name: "Jane Doe" })).unwrap();
       assert(user1);
       assert(user2);
 
@@ -115,7 +118,7 @@ describe("db", () => {
     });
 
     it("should delete a user", async () => {
-      const user = await User.create(db, { name: "John Doe" });
+      const user = (await User.create(db, { name: "John Doe" })).unwrap();
       assertEquals((await User.readAll(db)).length, 1);
       assert(user);
       await User.delete(db, user.id);
@@ -126,38 +129,38 @@ describe("db", () => {
   describe("Cards", () => {
     it("should create a new card", async () => {
       assertEquals(await Card.readAll(db, userId), []);
-      const result = await Card.create(db, userId, {
+      const result = (await Card.create(db, userId, {
         question: "What is your name?",
         answer: "John Doe",
         type: "text",
-      });
+      })).unwrap();
       assert(result);
       assertEquals((await Card.readAll(db, userId)).length, 1);
     });
 
     it("should read a card", async () => {
-      const card = await Card.create(db, userId, {
+      const card = (await Card.create(db, userId, {
         question: "What is your name?",
         answer: "John Doe",
         type: "text",
-      });
+      })).unwrap();
       assert(card);
-      const result = await Card.read(db, userId, card.id);
+      const result = (await Card.read(db, userId, card.id)).unwrap();
       assert(result);
       assertEquals(result.id, card.id);
     });
 
     it("should read all cards", async () => {
-      const card1 = await Card.create(db, userId, {
+      const card1 = (await Card.create(db, userId, {
         question: "What is your name?",
         answer: "John Doe",
         type: "text",
-      });
-      const card2 = await Card.create(db, userId, {
+      })).unwrap();
+      const card2 = (await Card.create(db, userId, {
         question: "What is your phone number?",
         answer: "123-456-7890",
         type: "phone",
-      });
+      })).unwrap();
       assert(card1);
       assert(card2);
 
@@ -166,11 +169,11 @@ describe("db", () => {
     });
 
     it("should delete a card", async () => {
-      const card = await Card.create(db, userId, {
+      const card = (await Card.create(db, userId, {
         question: "What is your name?",
         answer: "John Doe",
         type: "text",
-      });
+      })).unwrap();
       assertEquals((await Card.readAll(db, userId)).length, 1);
       assert(card);
       await Card.delete(db, userId, card.id);
@@ -181,21 +184,21 @@ describe("db", () => {
       const userId1 = "1";
       const userId2 = "2";
 
-      const card1 = await Card.create(db, userId1, {
+      const card1 = (await Card.create(db, userId1, {
         question: "What is your name?",
         answer: "John Doe",
         type: "text",
-      });
-      const card2 = await Card.create(db, userId1, {
+      })).unwrap();
+      const card2 = (await Card.create(db, userId1, {
         question: "What is your phone number?",
         answer: "123-456-7890",
         type: "phone",
-      });
-      const card3 = await Card.create(db, userId2, {
+      })).unwrap();
+      const card3 = (await Card.create(db, userId2, {
         question: "What is your name?",
         answer: "John Doe",
         type: "text",
-      });
+      })).unwrap();
       assert(card1);
       assert(card2);
       assert(card3);
@@ -209,40 +212,52 @@ describe("db", () => {
   });
 
   describe("CardAttempt", () => {
-    it("should create a new card attempt", async () => {
+    it("should create a new card attempt with datetime", async () => {
       assertEquals(await CardAttempt.readAll(db, userId), []);
-      const result = await CardAttempt.create(db, userId, {
+      const result = (await CardAttempt.create(db, userId, {
         cardId: "1",
-        date: Temporal.Now.plainDateISO().toString(),
+        date: Temporal.Now.plainDateTimeISO(),
         correct: true,
-      });
+      })).unwrap();
+      assert(result);
+      assertEquals((await CardAttempt.readAll(db, userId)).length, 1);
+    });
+
+    it("should create a new card attempt with string", async () => {
+      assertEquals(await CardAttempt.readAll(db, userId), []);
+      const result = (await CardAttempt.create(db, userId, {
+        cardId: "1",
+        date: Temporal.Now.plainDateTimeISO().toString(),
+        correct: true,
+      })).unwrap();
       assert(result);
       assertEquals((await CardAttempt.readAll(db, userId)).length, 1);
     });
 
     it("should read a card attempt", async () => {
-      const cardAttempt = await CardAttempt.create(db, userId, {
+      const cardAttempt = (await CardAttempt.create(db, userId, {
         cardId: "1",
-        date: Temporal.Now.plainDateISO().toString(),
+        date: Temporal.Now.plainDateTimeISO(),
         correct: true,
-      });
+      })).unwrap();
       assert(cardAttempt);
-      const result = await CardAttempt.read(db, userId, cardAttempt.id);
+      const result = (await CardAttempt.read(db, userId, cardAttempt.id))
+        .unwrap();
       assert(result);
       assertEquals(result.id, cardAttempt.id);
     });
 
     it("should read all card attempts and sort by date", async () => {
-      const cardAttempt1 = await CardAttempt.create(db, userId, {
+      const cardAttempt1 = (await CardAttempt.create(db, userId, {
         cardId: "1",
         date: Temporal.PlainDateTime.from("2021-01-01T00:00:00").toString(),
         correct: true,
-      });
-      const cardAttempt2 = await CardAttempt.create(db, userId, {
+      })).unwrap();
+      const cardAttempt2 = (await CardAttempt.create(db, userId, {
         cardId: "1",
         date: Temporal.PlainDateTime.from("2021-01-02T00:00:00").toString(),
         correct: true,
-      });
+      })).unwrap();
       assert(cardAttempt1);
       assert(cardAttempt2);
 
@@ -258,21 +273,21 @@ describe("db", () => {
       const cardId1 = "1";
       const cardId2 = "2";
 
-      const cardAttempt1 = await CardAttempt.create(db, userId, {
+      const cardAttempt1 = (await CardAttempt.create(db, userId, {
         cardId: cardId1,
-        date: Temporal.Now.plainDateISO().toString(),
+        date: Temporal.Now.plainDateTimeISO(),
         correct: true,
-      });
-      const cardAttempt2 = await CardAttempt.create(db, userId, {
+      })).unwrap();
+      const cardAttempt2 = (await CardAttempt.create(db, userId, {
         cardId: cardId1,
-        date: Temporal.Now.plainDateISO().toString(),
+        date: Temporal.Now.plainDateTimeISO(),
         correct: true,
-      });
-      const cardAttempt3 = await CardAttempt.create(db, userId, {
+      })).unwrap();
+      const cardAttempt3 = (await CardAttempt.create(db, userId, {
         cardId: cardId2,
-        date: Temporal.Now.plainDateISO().toString(),
+        date: Temporal.Now.plainDateTimeISO(),
         correct: true,
-      });
+      })).unwrap();
       assert(cardAttempt1);
       assert(cardAttempt2);
       assert(cardAttempt3);
@@ -282,11 +297,11 @@ describe("db", () => {
     });
 
     it("should delete a card attempt", async () => {
-      const cardAttempt = await CardAttempt.create(db, userId, {
+      const cardAttempt = (await CardAttempt.create(db, userId, {
         cardId: "1",
-        date: Temporal.Now.plainDateISO().toString(),
+        date: Temporal.Now.plainDateTimeISO(),
         correct: true,
-      });
+      })).unwrap();
       assertEquals((await CardAttempt.readAll(db, userId)).length, 1);
       assert(cardAttempt);
       await CardAttempt.delete(db, userId, cardAttempt.id);
@@ -297,21 +312,21 @@ describe("db", () => {
       const cardId1 = "1";
       const cardId2 = "2";
 
-      const cardAttempt1 = await CardAttempt.create(db, userId, {
+      const cardAttempt1 = (await CardAttempt.create(db, userId, {
         cardId: cardId1,
-        date: Temporal.Now.plainDateISO().toString(),
+        date: Temporal.Now.plainDateTimeISO(),
         correct: true,
-      });
-      const cardAttempt2 = await CardAttempt.create(db, userId, {
+      })).unwrap();
+      const cardAttempt2 = (await CardAttempt.create(db, userId, {
         cardId: cardId1,
-        date: Temporal.Now.plainDateISO().toString(),
+        date: Temporal.Now.plainDateTimeISO(),
         correct: true,
-      });
-      const cardAttempt3 = await CardAttempt.create(db, userId, {
+      })).unwrap();
+      const cardAttempt3 = (await CardAttempt.create(db, userId, {
         cardId: cardId2,
-        date: Temporal.Now.plainDateISO().toString(),
+        date: Temporal.Now.plainDateTimeISO(),
         correct: true,
-      });
+      })).unwrap();
       assert(cardAttempt1);
       assert(cardAttempt2);
       assert(cardAttempt3);
@@ -325,21 +340,21 @@ describe("db", () => {
       const userId1 = "1";
       const userId2 = "2";
 
-      const cardAttempt1 = await CardAttempt.create(db, userId1, {
+      const cardAttempt1 = (await CardAttempt.create(db, userId1, {
         cardId: "1",
-        date: Temporal.Now.plainDateISO().toString(),
+        date: Temporal.Now.plainDateTimeISO(),
         correct: true,
-      });
-      const cardAttempt2 = await CardAttempt.create(db, userId1, {
+      })).unwrap();
+      const cardAttempt2 = (await CardAttempt.create(db, userId1, {
         cardId: "2",
-        date: Temporal.Now.plainDateISO().toString(),
+        date: Temporal.Now.plainDateTimeISO(),
         correct: true,
-      });
-      const cardAttempt3 = await CardAttempt.create(db, userId2, {
+      })).unwrap();
+      const cardAttempt3 = (await CardAttempt.create(db, userId2, {
         cardId: "1",
-        date: Temporal.Now.plainDateISO().toString(),
+        date: Temporal.Now.plainDateTimeISO(),
         correct: true,
-      });
+      })).unwrap();
       assert(cardAttempt1);
       assert(cardAttempt2);
       assert(cardAttempt3);

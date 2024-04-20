@@ -3,6 +3,8 @@ import {
   CardAttempt as CardAttemptType,
   User as UserType,
 } from "./types.ts";
+import { Err, Ok, Result } from "@oxi/result";
+import { None, Option, Some } from "@oxi/option";
 
 // Paths
 
@@ -32,6 +34,10 @@ function getKvCardAttemptPath(userId: string, attemptId: string): string[] {
 
 // CRUD
 
+export async function getKv(path?: string): Promise<Deno.Kv> {
+  return await Deno.openKv(path);
+}
+
 export class Db {
   private constructor() {}
 
@@ -59,21 +65,31 @@ export class User {
   static async create(
     kv: Deno.Kv,
     user: Omit<UserType, "id"> & { id?: string },
-  ): Promise<UserType | null> {
+  ): Promise<Result<UserType, string>> {
     if (!user.id) {
       user.id = crypto.randomUUID();
     }
-    const key = getKvUserPath(user.id);
+    const value: UserType = {
+      id: user.id,
+      name: user.name,
+    };
+    const key = getKvUserPath(value.id);
     const result = await kv.atomic()
       .check({ key, versionstamp: null })
-      .set(key, user)
+      .set(key, value)
       .commit();
-    return result.ok ? user as UserType : null;
+    if (!result.ok) {
+      return Err("User not created");
+    }
+    return Ok(value);
   }
 
-  static async read(kv: Deno.Kv, user: string): Promise<UserType | null> {
+  static async read(kv: Deno.Kv, user: string): Promise<Option<UserType>> {
     const result = await kv.get<UserType>(getKvUserPath(user));
-    return result.value;
+    if (!result.value) {
+      return None;
+    }
+    return Some(result.value);
   }
 
   static async readAll(kv: Deno.Kv): Promise<UserType[]> {
@@ -101,25 +117,38 @@ export class Card {
     kv: Deno.Kv,
     userId: string,
     card: Omit<CardType, "id"> & { id?: string },
-  ): Promise<CardType | null> {
+  ): Promise<Result<CardType, string>> {
     if (!card.id) {
       card.id = crypto.randomUUID();
     }
-    const key = getKvCardPath(userId, card.id);
+    const value: CardType = {
+      id: card.id,
+      question: card.question,
+      hint: card.hint,
+      answer: card.answer,
+      type: card.type,
+    };
+    const key = getKvCardPath(userId, value.id);
     const result = await kv.atomic()
       .check({ key, versionstamp: null })
       .set(key, card)
       .commit();
-    return result.ok ? card as CardType : null;
+    if (!result.ok) {
+      return Err("Card not created");
+    }
+    return Ok(value);
   }
 
   static async read(
     kv: Deno.Kv,
     userId: string,
     cardId: string,
-  ): Promise<CardType | null> {
+  ): Promise<Option<CardType>> {
     const result = await kv.get<CardType>(getKvCardPath(userId, cardId));
-    return result.value;
+    if (!result.value) {
+      return None;
+    }
+    return Some(result.value);
   }
 
   static async readAll(kv: Deno.Kv, userId: string): Promise<CardType[]> {
@@ -156,25 +185,45 @@ export class CardAttempt {
   static async create(
     kv: Deno.Kv,
     userId: string,
-    attempt: Omit<CardAttemptType, "id"> & { id?: string },
-  ): Promise<CardAttemptType | null> {
+    attempt: Omit<CardAttemptType, "id" | "date"> & {
+      id?: string;
+      date?: Temporal.PlainDateTime | string;
+    },
+  ): Promise<Result<CardAttemptType, string>> {
     if (!attempt.id) {
       attempt.id = crypto.randomUUID();
     }
-    const key = getKvCardAttemptPath(userId, attempt.id);
-    const result = await kv.set(key, attempt);
-    return result.ok ? attempt as CardAttemptType : null;
+    if (!attempt.date) {
+      attempt.date = Temporal.Now.plainDateTimeISO();
+    } else if (typeof attempt.date === "string") {
+      attempt.date = Temporal.PlainDateTime.from(attempt.date);
+    }
+    const value: CardAttemptType = {
+      id: attempt.id,
+      cardId: attempt.cardId,
+      date: attempt.date.toString(),
+      correct: attempt.correct,
+    };
+    const key = getKvCardAttemptPath(userId, value.id);
+    const result = await kv.set(key, value);
+    if (!result.ok) {
+      return Err("Card attempt not created");
+    }
+    return Ok(value);
   }
 
   static async read(
     kv: Deno.Kv,
     userId: string,
     attemptId: string,
-  ): Promise<CardAttemptType | null> {
+  ): Promise<Option<CardAttemptType>> {
     const result = await kv.get<CardAttemptType>(
       getKvCardAttemptPath(userId, attemptId),
     );
-    return result.value;
+    if (!result.value) {
+      return None;
+    }
+    return Some(result.value);
   }
 
   static async readAll(

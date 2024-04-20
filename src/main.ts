@@ -1,7 +1,7 @@
 import { Card, CardAttempt } from "./types.ts";
-import { Db } from "./db.ts";
+import { Db, getKv } from "./db.ts";
 
-function attemptAnswer(card: Card, answer: string): CardAttempt {
+export function attemptAnswer(card: Card, answer: string): CardAttempt {
   const correct = isAnswerToCardCorrect(card, answer);
   const date = Temporal.Now.plainDateTimeISO().toString();
   return { id: crypto.randomUUID(), cardId: card.id, date, correct };
@@ -31,39 +31,7 @@ function isPhoneNumberMatches(expected: string, actual: string): boolean {
 /// Paths
 
 if (import.meta.main) {
-  const kv = await Deno.openKv();
-
-  const user = await Db.User.create(kv, { name: "Audrow" });
-  if (!user) throw new Error("User not created");
-
-  const card = await Db.Card.create(kv, user.id, {
-    question: "What is your name?",
-    answer: "Audrow",
-    type: "text",
-  });
-  if (!card) throw new Error("Card not created");
-
-  {
-    const cardAttempt = await Db.CardAttempt.create(
-      kv,
-      user.id,
-      attemptAnswer(card, "PAudrow"),
-    );
-    if (!cardAttempt) throw new Error("Card attempt not created");
-  }
-  {
-    const cardAttempt = await Db.CardAttempt.create(
-      kv,
-      user.id,
-      attemptAnswer(card, "Audrow"),
-    );
-    if (!cardAttempt) throw new Error("Card attempt not created");
-  }
-  const attempts = await Db.CardAttempt.readAll(kv, user.id);
-  console.log(
-    attempts.map((a) => `${a.date}: ${a.correct ? "Correct" : "Incorrect"}`)
-      .join("\n"),
-  );
-
-  await Db.reset(kv);
+  const kv = await getKv();
+  const userResult = await Db.User.create(kv, { name: "Audrow" });
+  if (userResult.isErr()) throw new Error(userResult.unwrapErr());
 }
