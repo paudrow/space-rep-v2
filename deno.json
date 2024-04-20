@@ -1,11 +1,15 @@
 {
   "unstable": [
     "temporal",
-    "denokv"
+    "kv"
   ],
   "tasks": {
+    "run": "deno run src/main.ts",
     "dev": "deno run --watch src/main.ts",
-    "test": "deno test -A --unstable-kv"
+    "test": "deno test -A",
+    "test:watch": "deno test -A --watch",
+    "db:seed": "deno run --allow-read --allow-write scripts/seed_db.ts",
+    "db:reset": "deno run --allow-read --allow-write scripts/reset_db.ts"
   },
   "imports": {
     "@oxi/option": "jsr:@oxi/option@^0.2.0",
