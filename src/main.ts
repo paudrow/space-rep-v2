@@ -13,8 +13,16 @@ function isAnswerToCardCorrect(card: Card, answer: string): boolean {
   switch (card.type) {
     case "text":
       return isTextMatches(card.answer, answer);
-    case "phone":
+    case "number":
+      throw new Error("Not implemented");
+    case "phone number":
       return isPhoneNumberMatches(card.answer, answer);
+    case "self assesment":
+      throw new Error("Not implemented");
+    case "multiple choice":
+      throw new Error("Not implemented");
+    case "true or false":
+      throw new Error("Not implemented");
     default:
       throw new Error(`Unknown card type: ${card.type}`);
   }

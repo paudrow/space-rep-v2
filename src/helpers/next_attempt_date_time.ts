@@ -1,15 +1,17 @@
-import { CardAttempt } from "./types.ts";
+import { CardAttempt } from "../types.ts";
 import { AttemptsAccessor } from "./attempts_accesor.ts";
 import { Err, Ok, Result } from "@oxi/result";
 
+export type NextAttemptOptions = {
+  unit: Temporal.DateTimeUnit;
+  minAddOnCorrect: Temporal.Duration;
+  scalerOnTwoCorrect: number;
+  scalarOnCorrectWrongCorrect: number;
+};
+
 export function nextAttemptDateTime(
   attempts: CardAttempt[],
-  options?: {
-    unit: Temporal.DateTimeUnit;
-    minAddOnCorrect: Temporal.Duration;
-    scalerOnTwoCorrect: number;
-    scalarOnCorrectWrongCorrect: number;
-  },
+  options?: NextAttemptOptions,
 ): Result<Temporal.PlainDateTime, string> {
   const unit = options?.unit ?? "day";
   // make a temporal turation of 1 day

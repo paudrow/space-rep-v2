@@ -1,7 +1,7 @@
 import { describe, it } from "@std/testing/bdd";
 import { assertAlmostEquals, assertEquals } from "@std/assert";
-import { nextAttemptDateTime } from "./next_attempt_date_time.ts";
-import { CardAttempt } from "./types.ts";
+import { nextAttemptDateTime } from "../helpers/next_attempt_date_time.ts";
+import { CardAttempt } from "../types.ts";
 
 const today = Temporal.Now.plainDateTimeISO();
 

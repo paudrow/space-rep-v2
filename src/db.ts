@@ -41,10 +41,6 @@ export async function getKv(path?: string): Promise<Deno.Kv> {
 export class Db {
   private constructor() {}
 
-  private User = User;
-  private Card = Card;
-  private CardAttempt = CardAttempt;
-
   static get User() {
     return User;
   }

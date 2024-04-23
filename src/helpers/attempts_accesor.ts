@@ -1,4 +1,4 @@
-import { CardAttempt } from "./types.ts";
+import { CardAttempt } from "../types.ts";
 import { None, Option, Some } from "@oxi/option";
 
 export class AttemptsAccessor {

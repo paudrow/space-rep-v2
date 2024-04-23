@@ -3,7 +3,13 @@ export interface User {
   name: string;
 }
 
-export type CardType = "text" | "phone";
+export type CardType =
+  | "text"
+  | "number"
+  | "phone number"
+  | "self assesment"
+  | "multiple choice"
+  | "true or false";
 
 export interface Card {
   id: string;
