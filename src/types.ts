@@ -7,8 +7,6 @@ export type CardType =
   | "text"
   | "number"
   | "phone number"
-  | "self assesment"
-  | "multiple choice"
   | "true or false";
 
 export interface Card {
